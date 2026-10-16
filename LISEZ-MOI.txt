@@ -1,0 +1,39 @@
+HAKILI — Système de Gestion Avicole (Antoine Software) — version Flutter / Windows
+==================================================================================
+
+AVANT DE COMMENCER (une seule fois sur le PC)
+  1. Installer Visual Studio Community, en cochant « Développement Desktop en C++ ».
+  2. Installer Flutter (docs.flutter.dev > Install > Windows) et ajouter C:\src\flutter\bin au Path.
+  3. Ouvrir l'invite de commandes et taper :  flutter doctor
+     (les lignes Flutter, Windows et Visual Studio doivent être vertes)
+
+INSTALLER LE PROJET
+  1. Dézipper hakili.zip dans un dossier, par exemple C:\Hakili\hakili
+  2. Ouvrir l'invite de commandes DANS ce dossier (celui qui contient pubspec.yaml) et taper :
+
+        flutter create --platforms=windows .
+        flutter pub get
+        flutter run -d windows
+
+     Si flutter create propose de remplacer des fichiers, gardez pubspec.yaml, le dossier lib et le dossier assets.
+  3. Le premier lancement prend quelques minutes. Windows peut demander d'activer le « mode développeur » : acceptez.
+
+TESTER AVEC VOS VRAIES DONNÉES (sans aucun risque)
+  Copiez votre fichier  donnies_antoine.db  (dossier utilisateur) et nommez la COPIE
+        donnees_hakili_essai.db
+  dans le même dossier. L'original n'est jamais touché pendant les essais.
+
+BASCULER SUR LA VRAIE BASE (à la toute fin, quand tout est validé)
+  Dans lib/config/constantes.dart, changez :   const bool utiliserBaseReelle = false;   en   true
+  Pensez à libérer la place de ce PC avec la « réinitialisation PC » de votre appli d'administration
+  si le serveur le considère comme un nouveau PC.
+
+ICÔNE DU LOGICIEL
+  Remplacez le fichier  windows\runner\resources\app_icon.ico  par votre logo.ico (même nom : app_icon.ico).
+
+FICHIERS UTILES AU SUPPORT (dossier utilisateur)
+  donnies_antoine_diagnostic.log     ouvertures, fermetures, erreurs inattendues
+  donnies_antoine_erreurs_cloud.log  erreurs de synchronisation Supabase
+
+EN CAS D'ERREUR ROUGE AU LANCEMENT
+  Copiez le message complet : les corrections se font fichier par fichier.

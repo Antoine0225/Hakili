@@ -1,0 +1,70 @@
+===============================================================================
+       CONTRAT DE LICENCE D'UTILISATION DU LOGICIEL (CLU) — Hakili 
+===============================================================================
+Version 1.0 — En vigueur en 2026
+Éditeur : Antoine Software, Bamako, République du Mali.
+
+VEUILLEZ LIRE ATTENTIVEMENT CE CONTRAT AVANT D'INSTALLER LE LOGICIEL. EN COCHANT
+LA CASE "JE COMPRENDS ET J'ACCEPTE LES TERMES DU CONTRAT" ET EN PROCEDANT À 
+L'INSTALLATION DE "ANTOINESOFTWARE", VOUS ACCEPTEZ D'ÊTRE LIÉ PAR TOUTES LES 
+DISPOSITIONS DU PRÉSENT CONTRAT.
+
+1. PROPRIÉTÉ INTELLECTUELLE ET CONCESSION DE LICENCE
+Le logiciel "Hakili" (incluant son code source, ses interfaces graphiques, 
+son calculateur de marge et son module d'Intelligence Artificielle intégré) est la 
+propriété exclusive d'Antoine Software. 
+Antoine Software concède à l'utilisateur une licence d'utilisation non exclusive, 
+personnelle et temporaire, soumise au paiement régulier d'un abonnement.
+
+2. SÉCURITÉ ET RESTRICTION MULTI-POSTES (PC MAX)
+La licence octroyée est strictement liée à l'adresse e-mail de l'utilisateur et au 
+nombre maximal d'ordinateurs (PC Max) défini lors de l'achat. 
+L'utilisateur reconnaît et accepte que :
+- Le logiciel génère un identifiant unique (Machine ID) pour chaque ordinateur.
+- Toute tentative de connexion simultanée au-delà du quota autorisé bloquera 
+  immédiatement l'accès au système.
+- Le contournement ou la modification des mécanismes de sécurité de la licence 
+  entraînera la révocation immédiate et définitive du compte sans préavis ni 
+  remboursement.
+
+3. REQUÊTES SERVEUR ET ENREGISTREMENT DES DONNÉES
+Pour assurer son fonctionnement, le logiciel communique en temps réel avec des 
+serveurs cloud sécurisé. L'utilisateur accepte que ses flux de 
+caisse, arrivages et bilans de marges soient stockés de manière chiffrée sur ces 
+infrastructures afin de permettre la synchronisation et la sauvegarde automatique.
+
+4. MISE À JOUR AUTOMATIQUE (AUTO-UPDATE)
+Le logiciel intègre un système de mise à jour automatique en arrière-plan. Au démarrage, 
+l'application vérifie la présence d'une nouvelle version sur le serveur de mise à 
+jour. L'utilisateur accepte que le logiciel télécharge et applique 
+les correctifs techniques nécessaires pour assurer la continuité du service et la 
+sécurité des données de caisse.
+
+5. ASSISTANT IA AVICULTURE CONNECTÉ
+L'onglet "Expert IA Aviculture" utilise une connexion API tierce pour formuler des 
+conseils vétérinaires et agronomiques de manière autonome. Les diagnostics, formules 
+d'aliments et traitements prescrits par l'IA sont fournis à titre informatif et 
+consultatif. Hakili ne saurait être tenu pour responsable des pertes de 
+cheptel ou baisses de rendement liées à une mauvaise interprétation des conseils 
+générés par l'Intelligence Artificielle.
+
+6. LIMITATION DE RESPONSABILITÉ
+Antoine Software s'efforce de garantir une disponibilité maximale de ses services cloud. 
+Cependant, l'éditeur ne peut être tenu responsable des interruptions d'accès au 
+logiciel liées à des pannes de réseau internet local au Mali, à des cas de force 
+majeure ou à des opérations de maintenance technique sur la soute de données.
+
+7. RÉSILIATION ET PURGE DES DONNÉES
+En cas de non-paiement de l'abonnement ou de violation des règles d'utilisation, 
+Antoine Software se réserve le droit, depuis sa console administrateur, de révoquer la 
+licence d'utilisation à distance et de procéder à la purge définitive de toutes 
+les données de caisse et bilans associés au compte de l'utilisateur.
+
+8. DROIT APPLICABLE
+Le présent contrat est régi par le droit en vigueur en République du Mali. Tout litige 
+relatif à son interprétation ou à son exécution sera soumis aux tribunaux compétents de 
+Bamako.
+
+Antoine Software vous remercie pour votre confiance et vous souhaite une excellente 
+gestion de vos activités avicoles.
+===============================================================================

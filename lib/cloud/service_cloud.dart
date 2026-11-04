@@ -26,6 +26,8 @@ class ServiceCloud {
 
   static final ValueNotifier<EtatCloud> etat = ValueNotifier(EtatCloud.demarrage);
   static final ValueNotifier<int> enAttente = ValueNotifier(0);
+  /// Opérations que le serveur a refusées trop de fois : elles attendent la décision du Patron.
+  static final ValueNotifier<int> bloquees = ValueNotifier(0);
   /// Augmente chaque fois que des données de l'autre PC ont été intégrées.
   static final ValueNotifier<int> versionDonnees = ValueNotifier(0);
   /// Augmente quand le nom de la ferme change à cause d'un autre PC : le menu se rafraîchit seul.
@@ -48,10 +50,12 @@ class ServiceCloud {
       return;
     }
     await _preparerDonnees();
+    await FileAttente.reprendreApresMiseAJour(versionLogiciel); // nouvelle version → les lignes bloquées sont retentées
     _moteur = MoteurCloud(_licence);
     FileAttente.urgent = true;
     etat.value = EtatCloud.demarrage;
     enAttente.value = await FileAttente.compter();
+    bloquees.value = await FileAttente.compterBloquees();
     _horloge = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
@@ -77,16 +81,31 @@ class ServiceCloud {
         await Future.delayed(const Duration(milliseconds: 200));
       }
       await _cycle();
-      final reste = await FileAttente.compter();
+      final reste = await FileAttente.compterAEnvoyer(); // les lignes qui attendent une reprise automatique ne comptent pas
       if (reste == 0) return (true, 0);
       if (etat.value == EtatCloud.horsLigne || etat.value == EtatCloud.local) break;
     }
-    final reste = await FileAttente.compter();
+    final reste = await FileAttente.compterAEnvoyer();
     return (reste == 0, reste);
   }
 
   /// Force un cycle tout de suite (ex. bouton « Synchroniser maintenant »).
   static void synchroniserMaintenant() => FileAttente.urgent = true;
+
+  /// Reprise contrôlée des opérations bloquées : une dernière tentative tout de suite, puis on relit les compteurs.
+  /// [ids] = null → toutes. Ce qui est encore refusé revient dans la liste avec la nouvelle raison.
+  static Future<void> reprendreBloquees({List<int>? ids}) async {
+    await FileAttente.relancer(ids: ids);
+    await viderFile();
+    enAttente.value = await FileAttente.compter();
+    bloquees.value = await FileAttente.compterBloquees();
+  }
+
+  /// Le Patron abandonne ces opérations : elles ne seront plus jamais envoyées.
+  static Future<void> abandonnerBloquees(List<int> ids) async {
+    await FileAttente.abandonner(ids);
+    bloquees.value = await FileAttente.compterBloquees();
+  }
 
   // ------------------------------------------------------------------ un cycle
   static Future<void> _cycle() async {
@@ -96,6 +115,7 @@ class ServiceCloud {
     _dernierCycle = DateTime.now();
     FileAttente.urgent = false;
     try {
+      await FileAttente.reprendreAutomatiquement(); // les lignes refusées dont le délai est écoulé sont retentées toutes seules
       final ops = await FileAttente.lire(_licence);
       final curseurs = await ApplicationTirage.lireCurseurs(cloudTablesIncrementales);
       final res = await moteur.executerCycle(ops, curseurs);
@@ -148,9 +168,10 @@ class ServiceCloud {
 
   static Future<void> _appliquerResultat(ResultatCycle res) async {
     await FileAttente.retirer(res.idsOk);
-    await FileAttente.compterUnEchec(res.echecs.keys);
+    await FileAttente.compterUnEchec(res.echecs);
     final attente = await FileAttente.compter();
     enAttente.value = attente;
+    bloquees.value = await FileAttente.compterBloquees();
 
     if (!res.config) {
       etat.value = EtatCloud.local;

@@ -17,6 +17,12 @@ class Session {
   }
   static String nomFerme = 'ANTOINE SOFTWARE';
 
+  /// Prénom du propriétaire (saisi à la configuration) : sert dans les messages (« Seul le Patron Antoine… »).
+  static String nomPatron = '';
+
+  /// « Patron Antoine » ou simplement « Patron » si aucun prénom n'a été donné.
+  static String get patronLibelle => nomPatron.trim().isEmpty ? 'Patron' : 'Patron ${nomPatron.trim()}';
+
   /// Le Patron peut donner à l'Ouvrier l'accès au module Élevage (réglage « acces_module3_ouvrier »).
   static bool accesModule3Ouvrier = false;
 

@@ -22,6 +22,7 @@ import 'securite/licence_locale.dart';
 import 'securite/pin.dart';
 import 'services/diagnostic.dart';
 import 'services/meteo.dart';
+import 'services/sauvegarde.dart';
 import 'session.dart';
 import 'theme/palette.dart';
 
@@ -71,6 +72,7 @@ Future<void> main() async {
 
   await _chargerReglagesDeSession();
   Meteo.demarrer(); // météo en direct, jamais bloquante
+  Sauvegarde.demarrer(); // copie de sécurité du jour, en arrière-plan
   final theme = await Parametres.lire('theme', defaut: 'Dark');
 
   runApp(HakiliApp(modeInitial: theme == 'Light' ? ThemeMode.light : ThemeMode.dark));
@@ -80,6 +82,7 @@ Future<void> main() async {
 Future<void> _chargerReglagesDeSession() async {
   final nom = (await Parametres.lire('nom_ferme')).trim();
   Session.nomFerme = nom.isNotEmpty ? nom : 'ANTOINE SOFTWARE';
+  Session.nomPatron = (await Parametres.lire('nom_patron')).trim();
   Session.accesModule3Ouvrier = await Parametres.lire('acces_module3_ouvrier', defaut: '0') == '1';
   Session.sacsAlimentEnStock = int.tryParse(await Parametres.lire('stock_aliment_sacs', defaut: '5')) ?? 5;
 }
@@ -101,6 +104,9 @@ class _EcouteurFermeture with WindowListener {
       BattementLicence.arreter();
       await ServiceCloud.viderFile().timeout(const Duration(seconds: 6), onTimeout: () => (false, 0));
       ServiceCloud.arreter();
+      Sauvegarde.arreter();
+      // dernière copie de la journée (elle remplace celle du matin) ; au plus 8 secondes d'attente
+      await Sauvegarde.faire(ecraser: true).timeout(const Duration(seconds: 8), onTimeout: () => false);
       await BaseLocale.fermer();
       Diagnostic.ecrire('Fermeture du logiciel');
     } catch (_) {}

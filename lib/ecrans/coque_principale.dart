@@ -288,7 +288,7 @@ class _CoquePrincipaleState extends State<CoquePrincipale> {
 
   // ------------------------------------------------------------------ pied de page
   Widget _pied(Palette p) {
-    const contact = '📞 Tél : +223 60 51 10 46\n✉️ Email : antoinemalle6051@gmail.com\n🔥 Assistance Premium Antoine Software';
+    const contact = '📞 Tél : +223 78 48 40 31\n✉️ Email : softwareantoine@gmail.com\n🔥 Assistance Premium Antoine Software';
     Widget lien(Widget enfant) => Tooltip(
           message: contact,
           preferBelow: false,

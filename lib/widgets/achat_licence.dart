@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme/palette.dart';
 import 'dialogues.dart';
 
-const numeroWhatsappVendeur = '22360511046';
+const numeroWhatsappVendeur = '22378484031';
 
 const _debutMessage = "Bonjour Antoine Software, je souhaite acheter une licence d'accès de ";
 const _finMessage = ' pour mon logiciel de gestion avicole. Voici mon adresse e-mail : ';
@@ -17,13 +17,13 @@ class _Offre {
 }
 
 const _offres = [
-  _Offre('🥇 Licence Premium — 1 AN\n💻 1 PC (1 utilisateur) — 40,000 fcfa',
+  _Offre('🥇 Licence Premium — 1 AN\n💻 1 PC (1 utilisateur) — 50,000 fcfa',
       '${_debutMessage}1 AN pour 1 PC (formule 1 utilisateur)$_finMessage', Color(0xFFBC6B2D)),
-  _Offre('🥇 Licence Premium — 1 AN\n💻💻 2 PC (2 utilisateurs) — 60,000 fcfa',
+  _Offre('🥇 Licence Premium — 1 AN\n💻💻 2 PC (2 utilisateurs) — 65,000 fcfa',
       '${_debutMessage}1 AN pour 2 PC (formule 2 utilisateurs)$_finMessage', Color(0xFF2F7D4F)),
-  _Offre('💎 Licence Business — 2 ANS\n💻 1 PC (1 utilisateur) — 65,000 fcfa',
+  _Offre('💎 Licence Business — 2 ANS\n💻 1 PC (1 utilisateur) — 75,000 fcfa',
       '${_debutMessage}2 ANS pour 1 PC (formule 1 utilisateur)$_finMessage', Color(0xFF123229)),
-  _Offre('💎 Licence Business — 2 ANS\n💻💻 2 PC (2 utilisateurs) — 90,000 fcfa',
+  _Offre('💎 Licence Business — 2 ANS\n💻💻 2 PC (2 utilisateurs) — 100,000 fcfa',
       '${_debutMessage}2 ANS pour 2 PC (formule 2 utilisateurs)$_finMessage', Color(0xFFB98A1E)),
 ];
 

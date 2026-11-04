@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../cloud/file_attente.dart';
 import '../securite/licence_locale.dart';
+import '../services/diagnostic.dart';
 import 'base_locale.dart';
 
 /// Génère un identifiant unique de 32 caractères (équivalent de uuid4().hex de Python).
@@ -25,7 +26,8 @@ class StockRepo {
     try {
       final l = await BaseLocale.db.rawQuery('SELECT nom, unite FROM catalogue_produits ORDER BY id ASC');
       return l.map((r) => Produit('${r['nom']}', '${r['unite'] ?? 'piece'}')).toList();
-    } catch (_) {
+    } catch (e) {
+      Diagnostic.erreur('lecture du catalogue de produits', e);
       return [];
     }
   }
@@ -39,7 +41,8 @@ class StockRepo {
         for (final r in l)
           '${r['nom']}': (((r['quantite_disponible'] as num?) ?? 0).toDouble(), ((r['cout_achat_unitaire'] as num?) ?? 0).toDouble())
       };
-    } catch (_) {
+    } catch (e) {
+      Diagnostic.erreur('lecture des stocks', e);
       return {};
     }
   }

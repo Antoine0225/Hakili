@@ -14,6 +14,12 @@ import '../widgets/mise_en_page_module.dart';
 import '../widgets/toast.dart';
 import 'dialogue_formule.dart';
 import 'dialogue_planificateur.dart';
+import 'ecran_formules.dart';
+import '../metier/formules_aliment.dart';
+import 'ecran_pondeuses.dart';
+import 'ecran_projet.dart';
+import '../metier/projet_chair.dart';
+import '../metier/projet_repro.dart';
 
 const _orange = Color(0xFFD99A3D), _vertP = Color(0xFF4C7A4A), _bleu = Color(0xFF5A83A6), _rougeP = Color(0xFFAF5A4A);
 const _entete = Color(0xFF877A66), _objectif = Color(0xFFABA49D), _txtDouxP = Color(0xFF98998E);
@@ -30,7 +36,7 @@ class EcranPrevisions extends StatefulWidget {
 
 class _EcranPrevisionsState extends State<EcranPrevisions> {
   int _onglet = 0;
-  String _vue = 'attente'; // 'attente' | 'formule' | 'pilotage'
+  String _vue = 'attente'; // 'attente' | 'formule' | 'pilotage' | 'formules'
   bool _evaluationFaite = false;
   ResultatProjet? _res;
   bool _pret = false;
@@ -220,15 +226,6 @@ class _EcranPrevisionsState extends State<EcranPrevisions> {
         SizedBox(
           width: double.infinity, height: 45,
           child: FilledButton(
-            onPressed: _evaluer,
-            style: FilledButton.styleFrom(backgroundColor: p.cuivre, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: const Text('🔥 ÉVALUER ET CALCULER LE PROJET', style: TextStyle(fontFamily: policeTexte, fontSize: 14, fontWeight: FontWeight.bold)),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          width: double.infinity, height: 45,
-          child: FilledButton(
             onPressed: _pdf,
             style: FilledButton.styleFrom(backgroundColor: p.succes, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: const Text('📊 GÉNÉRER LE RAPPORT PDF ET LES GRAPHES', style: TextStyle(fontFamily: policeTexte, fontSize: 14, fontWeight: FontWeight.bold)),
@@ -314,16 +311,35 @@ class _EcranPrevisionsState extends State<EcranPrevisions> {
           _bloc(p, [
             Padding(
               padding: const EdgeInsets.fromLTRB(15, 4, 15, 0),
-              child: Text("Filière d'exploitation actuelle :", style: TextStyle(fontFamily: policeTexte, fontSize: 13, fontWeight: FontWeight.bold, color: p.txtPrinc)),
+              child: Text('Simulateurs de projet :', style: TextStyle(fontFamily: policeTexte, fontSize: 13, fontWeight: FontWeight.bold, color: p.txtPrinc)),
             ),
-            _radio(p, '🍗 Poulet de Chair', 'chair', Session.typeElevage, (v) {
-              Session.typeElevage = v;
-              _filiereChangee();
-            }),
-            _radio(p, '🐓 Reproducteur / Ponte', 'repro', Session.typeElevage, (v) {
-              Session.typeElevage = v;
-              _filiereChangee();
-            }),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
+              child: Column(children: [
+                Row(children: [
+                  Expanded(child: SizedBox(height: 38, child: OutlinedButton(onPressed: () => ouvrirProjet(context, ModeleChair()), child: const Text('🍗 Poulet de chair')))),
+                  const SizedBox(width: 8),
+                  Expanded(child: SizedBox(height: 38, child: OutlinedButton(onPressed: () => ouvrirProjet(context, ModeleRepro()), child: const Text('🐓 Reproducteurs')))),
+                ]),
+                const SizedBox(height: 8),
+                Row(children: [
+                  Expanded(child: SizedBox(height: 38, child: OutlinedButton(onPressed: () => ouvrirPrevisionPondeuses(context), child: const Text('🥚 Pondeuses')))),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          await FormulesAliment.charger();
+                          if (mounted) setState(() => _vue = 'formules');
+                        },
+                        child: const Text('🧪 Formules'),
+                      ),
+                    ),
+                  ),
+                ]),
+              ]),
+            ),
           ]),
           _bloc(p, [
             _champ(p, 'Maïs grain :', 'mais'),
@@ -413,21 +429,6 @@ class _EcranPrevisionsState extends State<EcranPrevisions> {
 
   // ------------------------------------------------------------------ partie droite
   Widget _droite(Palette p) {
-    final chair = Previsions.chair;
-    Widget etape(String t, String cle) => Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5),
-            child: SizedBox(
-              height: 32,
-              child: FilledButton(
-                onPressed: () => _montrerFormule(cle),
-                style: FilledButton.styleFrom(backgroundColor: p.cuivre),
-                child: Text(t, style: const TextStyle(fontFamily: policeTexte, fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ),
-        );
-
     Widget curseur(String gauche, String centre, String droite, double valeur, ValueChanged<double> onChange, {Color? couleur}) =>
         Padding(
           padding: const EdgeInsets.fromLTRB(25, 5, 25, 0),
@@ -445,21 +446,23 @@ class _EcranPrevisionsState extends State<EcranPrevisions> {
         );
 
     return Column(children: [
-      if (chair)
+      if (_vue == 'formules')
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-          child: Row(children: [etape('👶 Démarrage', 'demarrage'), etape('🐓 Croissance', 'croissance'), etape('🍗 Finition', 'finition')]),
+          padding: const EdgeInsets.fromLTRB(25, 10, 25, 0),
+          child: Container(
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: p.cuivre, borderRadius: BorderRadius.circular(10)),
+            child: const Text('🧪 Formules', style: TextStyle(fontFamily: policeTexte, fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+          ),
         ),
-      if (chair)
-        curseur('📊 OPTIMISÉ (Économique)', 'PERFORMANCE RATION CHAIR', '🔥 BOOSTÉ (Rapide)', Previsions.boost, (v) {
+      curseur('📊 OPTIMISÉ (Économique)', 'BOOST DES FORMULES ET DES SIMULATEURS', '🔥 BOOSTÉ (Rapide)', Previsions.boost, (v) {
+        setState(() {
           Previsions.boost = v;
-          _sliderChange();
-        })
-      else
-        curseur('🥚 STANDARD (Économe)', 'INTENSITÉ STIMULATION REPRO', '🔥 INTENSIF (Ponte Max)', Previsions.boostRepro, (v) {
           Previsions.boostRepro = v;
-          _sliderChange();
-        }, couleur: p.alerte),
+        });
+        FormulesAliment.enregistrerBoost(v);
+      }),
       Expanded(
         child: Container(
           margin: const EdgeInsets.fromLTRB(25, 10, 25, 20),
@@ -475,6 +478,10 @@ class _EcranPrevisionsState extends State<EcranPrevisions> {
                 child: switch (_vue) {
                   'formule' => _vueFormule(),
                   'pilotage' => _vuePilotage(),
+                  'formules' => PanneauFormules(
+                      key: const ValueKey('formules'),
+                      boost: Previsions.boost,
+                      onFermer: () => setState(() => _vue = _evaluationFaite ? 'pilotage' : 'attente')),
                   _ => _vueAttente(),
                 },
               ),
@@ -496,13 +503,13 @@ class _EcranPrevisionsState extends State<EcranPrevisions> {
               child: const IconeFine('barres', couleur: Color(0xFFD99A3D), taille: 30),
             ),
             const SizedBox(height: 16),
-            const Text('Prêt à évaluer votre projet', style: TextStyle(fontFamily: policeTitre, fontSize: 22, fontWeight: FontWeight.bold, color: _txtP)),
+            const Text('Prévisions', style: TextStyle(fontFamily: policeTitre, fontSize: 22, fontWeight: FontWeight.bold, color: _txtP)),
             const SizedBox(height: 6),
             const SizedBox(
               width: 460,
               child: Text(
-                  "Cliquez sur « Évaluer et calculer le projet » pour afficher le tableau de pilotage et le rapport comptable,\n"
-                  "ou sur une étape (Démarrage, Croissance, Finition) pour voir sa formule d'aliment.",
+                  "Choisissez un simulateur (poulet de chair, reproducteurs, pondeuses) à gauche,\n"
+                  "ou cliquez sur « Formules » pour voir et modifier les formules d'aliment.",
                   textAlign: TextAlign.center, style: TextStyle(fontFamily: policeTexte, fontSize: 12, color: _txtDouxP)),
             ),
           ]),

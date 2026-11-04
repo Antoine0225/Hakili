@@ -6,6 +6,7 @@ import '../data/journal_repo.dart';
 import '../data/parametres.dart';
 import '../securite/licence_locale.dart';
 import '../securite/licence_serveur.dart';
+import '../securite/limite_essais_pin.dart';
 import '../securite/pin.dart';
 import '../services/logo_pdf.dart';
 import '../services/mise_a_jour.dart';
@@ -145,6 +146,23 @@ class _EcranParametresState extends State<EcranParametres> {
     Toast.afficher(context, '✅ Nom de la ferme modifié : $nouveau');
   }
 
+  /// Le prénom du patron sert dans les messages (« Seul le Patron Antoine possède la clé… »).
+  Future<void> _changerNomPatron() async {
+    if (!Session.estPatron) return;
+    final nouveau = await showDialog<String>(
+      context: context,
+      builder: (_) => _DialogueNomFerme(
+          actuel: Session.nomPatron, titre: 'Prénom du patron', libelle: 'Prénom', indice: 'Ex : Antoine'),
+    );
+    if (nouveau == null || nouveau == Session.nomPatron) return;
+    await Parametres.ecrire('nom_patron', nouveau);
+    Session.nomPatron = nouveau;
+    widget.onRoleChange();
+    if (!mounted) return;
+    setState(() {});
+    Toast.afficher(context, '✅ Prénom enregistré');
+  }
+
   // ------------------------------------------------------------------ changement de session
   Future<void> _changerSession() async {
     final p = Palette.de(context);
@@ -157,16 +175,29 @@ class _EcranParametresState extends State<EcranParametres> {
         Future<void> valider() async {
           if (enCours) return;
           setL(() => enCours = true);
-          final r = await Pin.identifierRole(c.text.trim());
-          if (r == null) {
-            JournalRepo.noter('Sécurité', 'ÉCHEC', 'Code PIN incorrect (changement de session)');
+          final attente = await LimiteEssaisPin.secondesRestantes();
+          if (attente > 0) {
+            if (!ctx.mounted) return;
             c.clear();
             setL(() {
-              erreur = '⚠️  Code PIN non reconnu.';
+              erreur = '⚠️  ${LimiteEssaisPin.message(attente)}';
               enCours = false;
             });
-          } else if (ctx.mounted) {
-            Navigator.pop(ctx, r);
+            return;
+          }
+          final r = await Pin.identifierRole(c.text.trim());
+          if (r == null) {
+            final blocage = await LimiteEssaisPin.enregistrerEchec();
+            JournalRepo.noter('Sécurité', 'ÉCHEC', 'Code PIN incorrect (changement de session)');
+            if (!ctx.mounted) return;
+            c.clear();
+            setL(() {
+              erreur = blocage > 0 ? '⚠️  ${LimiteEssaisPin.message(blocage)}' : '⚠️  Code PIN non reconnu.';
+              enCours = false;
+            });
+          } else {
+            await LimiteEssaisPin.reussite();
+            if (ctx.mounted) Navigator.pop(ctx, r);
           }
         }
 
@@ -312,6 +343,12 @@ class _EcranParametresState extends State<EcranParametres> {
               child: Text(Session.nomFerme, style: TextStyle(fontFamily: policeTexte, fontSize: 13, fontWeight: FontWeight.bold, color: p.txtPrinc)),
             ),
             _bouton('✏️ Changer le nom', p.panneau2, p.txtPrinc, _changerNomFerme, bordure: p.bordure),
+            Padding(
+              padding: const EdgeInsets.only(top: 14, bottom: 10),
+              child: Text('Prénom du patron :  ${Session.nomPatron.trim().isEmpty ? 'non renseigné' : Session.nomPatron.trim()}',
+                  style: TextStyle(fontFamily: policeTexte, fontSize: 12, color: p.txtDoux)),
+            ),
+            _bouton('✏️ Changer le prénom', p.panneau2, p.txtPrinc, _changerNomPatron, bordure: p.bordure),
           ]),
         if (Session.estPatron)
           _section(p, 'Logo pour les documents PDF', 'Votre logo apparaît en haut des PDF (rapports, reçus, dossier banque). Il n\'est affiché nulle part ailleurs.', 'info', [
@@ -354,8 +391,13 @@ class _EcranParametresState extends State<EcranParametres> {
 
 /// Petite fenêtre de saisie du nouveau nom (le champ est libéré proprement à la fermeture).
 class _DialogueNomFerme extends StatefulWidget {
-  final String actuel;
-  const _DialogueNomFerme({required this.actuel});
+  final String actuel, titre, libelle, indice;
+  const _DialogueNomFerme({
+    required this.actuel,
+    this.titre = 'Nom de la ferme',
+    this.libelle = 'Nouveau nom',
+    this.indice = 'Ex : Ferme Avicole de Moribabougou',
+  });
 
   @override
   State<_DialogueNomFerme> createState() => _DialogueNomFermeState();
@@ -372,12 +414,12 @@ class _DialogueNomFermeState extends State<_DialogueNomFerme> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Nom de la ferme'),
+        title: Text(widget.titre),
         content: SizedBox(
           width: 380,
           child: TextField(
             controller: _nom, autofocus: true,
-            decoration: const InputDecoration(labelText: 'Nouveau nom', hintText: 'Ex : Ferme Avicole de Moribabougou'),
+            decoration: InputDecoration(labelText: widget.libelle, hintText: widget.indice),
             onSubmitted: (_) => Navigator.pop(context, _nom.text.trim()),
           ),
         ),

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import '../config/constantes.dart';
 import '../data/base_locale.dart';
 import '../data/parametres.dart';
+import '../services/diagnostic.dart';
 import 'licence_serveur.dart';
 
 enum Issue { autorise, refuse, verrouille }
@@ -65,7 +66,8 @@ class Licence {
       final l = await BaseLocale.db.rawQuery('SELECT email FROM identite_utilisateur WHERE id = 1');
       if (l.isEmpty) return '';
       return ('${l.first['email'] ?? ''}').trim().toLowerCase();
-    } catch (_) {
+    } catch (e) {
+      Diagnostic.erreur("lecture de l'e-mail de licence", e);
       return '';
     }
   }

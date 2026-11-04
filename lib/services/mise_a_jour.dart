@@ -97,7 +97,7 @@ class MiseAJour {
       final version = '${ligne(majCleVersion)?['valeur'] ?? ''}'.trim();
       final ligneUrl = ligne(majCleUrl);
       final url = '${ligneUrl?['valeur'] ?? ''}'.trim();
-      final sha = '${ligneUrl?['sha256_exe'] ?? ''}'.trim().toLowerCase();
+      final sha = '${ligneUrl?['sha256_exe'] ?? ''}'.trim().toLowerCase().replaceFirst('sha256:', '').trim(); // accepte l'empreinte copiée telle quelle depuis GitHub
       if (version.isEmpty || !estPlusRecente(version, versionLogiciel)) {
         if (etat.value.phase != PhaseMaj.prete) etat.value = const EtatMaj(PhaseMaj.aucune);
         _nettoyerAnciens();

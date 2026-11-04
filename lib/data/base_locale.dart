@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../config/constantes.dart';
+import '../services/diagnostic.dart';
 
 /// La base de données locale (SQLite). Mêmes tables et mêmes noms de colonnes que le logiciel
 /// Python : une base existante sera donc reconnue sans rien perdre.
@@ -16,6 +17,9 @@ class BaseLocale {
   static Database? _db;
   static String _nomFichierActif = nomBaseEssai;
   static Database get db => _db!;
+
+  /// Nom du fichier de base actuellement ouvert (sert à la sauvegarde automatique).
+  static String get nomFichierActif => _nomFichierActif;
 
   /// L'e-mail du client est gardé en mémoire : il est demandé à l'intérieur de beaucoup d'écritures,
   /// et relire la base à ce moment-là bloquerait tout (le logiciel resterait figé sur un écran blanc).
@@ -41,19 +45,32 @@ class BaseLocale {
     );
     await _creerTables(_db!);
     try {
+      await _ajouterRaisonDesRefus(_db!);
+    } catch (e) {
+      Diagnostic.erreur("ajout de la colonne « derniere_erreur » à la file d'envoi", e);
+    }
+    try {
+      await _ajouterLoyer(_db!);
+    } catch (e) {
+      Diagnostic.erreur("ajout de la colonne « charge_loyer » aux bilans", e);
+    }
+    try {
       await _creerJournal(_db!);
-    } catch (_) {
+    } catch (e) {
       // le journal est un « plus » : s'il ne peut pas être créé, le logiciel fonctionne quand même
+      Diagnostic.erreur('création du journal des modifications', e);
     }
     try {
       await _creerCompteurs(_db!);
-    } catch (_) {
+    } catch (e) {
       // sans compteur, la lecture des ventes se fait simplement à chaque fois (plus lent, mais juste)
+      Diagnostic.erreur('création des compteurs de ventes', e);
     }
     try {
       final l = await _db!.rawQuery('SELECT email FROM identite_utilisateur WHERE id = 1');
       emailEnMemoire = l.isEmpty ? '' : ('${l.first['email'] ?? ''}').trim().toLowerCase();
-    } catch (_) {
+    } catch (e) {
+      Diagnostic.erreur("lecture de l'e-mail de licence", e);
       emailEnMemoire = '';
     }
   }
@@ -178,6 +195,33 @@ class BaseLocale {
       batch.execute(requete);
     }
     await batch.commit(noResult: true);
+  }
+
+  /// Les bilans gardent maintenant aussi le loyer. Sur une base existante, la colonne est ajoutée une seule fois,
+  /// sans toucher aux anciens bilans (leur loyer vaut 0).
+  static Future<void> _ajouterLoyer(Database d) async {
+    final colonnes = await d.rawQuery('PRAGMA table_info(bilans_financiers_locaux)');
+    final noms = colonnes.map((c) => '${c['name']}').toSet();
+    if (!noms.contains('charge_loyer')) {
+      await d.execute('ALTER TABLE bilans_financiers_locaux ADD COLUMN charge_loyer REAL DEFAULT 0');
+    }
+  }
+
+  /// La file d'envoi garde maintenant la raison des refus du serveur. Sur une base existante, la colonne
+  /// est ajoutée une seule fois, sans toucher aux données.
+  static Future<void> _ajouterRaisonDesRefus(Database d) async {
+    final colonnes = await d.rawQuery('PRAGMA table_info(file_attente_cloud)');
+    final noms = colonnes.map((c) => '${c['name']}').toSet();
+    if (!noms.contains('derniere_erreur')) {
+      await d.execute("ALTER TABLE file_attente_cloud ADD COLUMN derniere_erreur TEXT DEFAULT ''");
+    }
+    // reprises automatiques : combien de fois le logiciel a déjà retenté tout seul, et quand a eu lieu le dernier refus
+    if (!noms.contains('reprises_auto')) {
+      await d.execute('ALTER TABLE file_attente_cloud ADD COLUMN reprises_auto INTEGER DEFAULT 0');
+    }
+    if (!noms.contains('dernier_echec')) {
+      await d.execute('ALTER TABLE file_attente_cloud ADD COLUMN dernier_echec TEXT');
+    }
   }
 
   // ---------------------------------------------------------------- journal des modifications
@@ -315,7 +359,7 @@ class BaseLocale {
          id INTEGER PRIMARY KEY AUTOINCREMENT, date_archivage TEXT, periode TEXT,
          chiffre_affaires REAL, charge_electricite REAL, charge_transport REAL,
          charge_salaires REAL, charge_divers REAL, total_charges REAL, net_poche_boss REAL,
-         marge_nette_pct REAL, envoye_supabase INTEGER DEFAULT 0)''',
+         marge_nette_pct REAL, envoye_supabase INTEGER DEFAULT 0, charge_loyer REAL DEFAULT 0)''',
 
     // Élevage : bandes
     '''CREATE TABLE IF NOT EXISTS bandes_elevage (

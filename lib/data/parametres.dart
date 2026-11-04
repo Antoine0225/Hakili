@@ -1,5 +1,6 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import '../services/diagnostic.dart';
 import 'base_locale.dart';
 
 /// Les réglages du logiciel (nom de la ferme, PIN, thème...) : table « parametres », clé / valeur.
@@ -12,7 +13,8 @@ class Parametres {
           .rawQuery('SELECT valeur FROM parametres WHERE cle = ?', [cle]);
       if (l.isEmpty || l.first['valeur'] == null) return defaut;
       return l.first['valeur'] as String;
-    } catch (_) {
+    } catch (e) {
+      Diagnostic.erreur('lecture réglage « $cle »', e); // on garde la valeur par défaut, mais on le note
       return defaut;
     }
   }

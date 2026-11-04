@@ -22,6 +22,7 @@ class AssistantConfiguration extends StatefulWidget {
 
 class _AssistantConfigurationState extends State<AssistantConfiguration> {
   final _nom = TextEditingController();
+  final _prenom = TextEditingController();
   final _pinPatron = TextEditingController();
   final _pinOuvrier = TextEditingController();
   bool _masquer = true;
@@ -83,6 +84,7 @@ class _AssistantConfigurationState extends State<AssistantConfiguration> {
   @override
   void dispose() {
     _nom.dispose();
+    _prenom.dispose();
     _pinPatron.dispose();
     _pinOuvrier.dispose();
     super.dispose();
@@ -113,6 +115,8 @@ class _AssistantConfigurationState extends State<AssistantConfiguration> {
       _enCours = true;
     });
     await Parametres.ecrire('nom_ferme', nom);
+    await Parametres.ecrire('nom_patron', _prenom.text.trim());
+    Session.nomPatron = _prenom.text.trim();
     await Pin.definir(rolePatron, pp);
     await Pin.definir(roleOuvrier, po);
     await Parametres.ecrire('configuration_terminee', '1');
@@ -170,6 +174,14 @@ class _AssistantConfigurationState extends State<AssistantConfiguration> {
                       decoration: const InputDecoration(
                           labelText: 'Nom de la ferme',
                           hintText: 'Ex : Ferme Avicole de Moribabougou'),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: _prenom,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                          labelText: 'Prénom du patron (facultatif)',
+                          hintText: 'Ex : Antoine'),
                     ),
                     const SizedBox(height: 22),
                     _titreSection('02   CODES D\'ACCÈS SÉCURISÉS', p),

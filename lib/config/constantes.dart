@@ -39,6 +39,9 @@ const int cloudTaillePage = 1000;
 const int cloudTailleLot = 200;
 const int cloudChevauchement = 500;
 const int cloudMaxTentatives = 5;
+/// Quand le serveur a refusé une ligne 5 fois, le logiciel la retente TOUT SEUL après ces délais (en minutes) :
+/// 30 min, 3 h, 12 h, puis 48 h. Le Patron n'est prévenu (pastille rouge) qu'une fois toutes ces reprises épuisées.
+const List<int> cloudDelaisReprisesAuto = [30, 180, 720, 2880];
 const Map<String, String> cloudConflits = {
   'ventes': 'uid',
   'stocks_arrivages': 'uid',
@@ -58,7 +61,7 @@ const List<String> cloudTablesIncrementales = [
 // --- Divers
 /// Pendant les essais, le logiciel travaille sur un fichier d'essai. Mettez true UNIQUEMENT quand vous êtes prêt
 /// à utiliser votre vraie base (donnies_antoine.db) : c'est la bascule finale.
-const bool utiliserBaseReelle = true;
+const bool utiliserBaseReelle = false;
 const int licenceBattementMinutes = 30;
 /// Après ce nombre de minutes sans activité, le code PIN est redemandé (verrouillage automatique).
 const int verrouInactiviteMinutes = 45;

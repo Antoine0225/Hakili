@@ -10,12 +10,12 @@ import 'base_locale.dart';
 
 /// Le bilan « Marge & Bénéfice du Boss » calculé à l'écran.
 class BilanMarge {
-  final double ca, elec, transport, salaires, divers, totalCharges, netPoche, margePct;
+  final double ca, loyer, elec, transport, salaires, divers, totalCharges, netPoche, margePct;
   final String periode;
   final bool revenuModifie;
   final dynamic detailCaisse; // RevenuCaisse ou null si le revenu a été ajusté à la main
   const BilanMarge({
-    required this.ca, required this.elec, required this.transport, required this.salaires, required this.divers,
+    required this.ca, this.loyer = 0, required this.elec, required this.transport, required this.salaires, required this.divers,
     required this.totalCharges, required this.netPoche, required this.margePct, required this.periode,
     required this.revenuModifie, required this.detailCaisse,
   });
@@ -25,7 +25,10 @@ class BilanArchive {
   final String dateArchivage, periode;
   final double ca, totalCharges, net, margePct;
   final bool envoye;
-  const BilanArchive(this.dateArchivage, this.periode, this.ca, this.totalCharges, this.net, this.margePct, this.envoye);
+  // Détail des charges (ajouté pour pouvoir les consulter et les reprendre depuis les archives).
+  final double loyer, elec, transport, salaires, divers;
+  const BilanArchive(this.dateArchivage, this.periode, this.ca, this.totalCharges, this.net, this.margePct, this.envoye,
+      {this.loyer = 0, this.elec = 0, this.transport = 0, this.salaires = 0, this.divers = 0});
 }
 
 class BilansRepo {
@@ -34,13 +37,16 @@ class BilansRepo {
   static Future<List<BilanArchive>> archives() async {
     try {
       final l = await BaseLocale.db.rawQuery(
-          'SELECT date_archivage, periode, chiffre_affaires, total_charges, net_poche_boss, marge_nette_pct, envoye_supabase '
+          'SELECT date_archivage, periode, chiffre_affaires, total_charges, net_poche_boss, marge_nette_pct, envoye_supabase, '
+          'charge_electricite, charge_transport, charge_salaires, charge_divers, charge_loyer '
           'FROM bilans_financiers_locaux ORDER BY id DESC');
       double d(Object? v) => v is num ? v.toDouble() : 0.0;
       return [
         for (final r in l)
           BilanArchive('${r['date_archivage']}', '${r['periode']}', d(r['chiffre_affaires']), d(r['total_charges']),
-              d(r['net_poche_boss']), d(r['marge_nette_pct']), r['envoye_supabase'] == 1)
+              d(r['net_poche_boss']), d(r['marge_nette_pct']), r['envoye_supabase'] == 1,
+              loyer: d(r['charge_loyer']), elec: d(r['charge_electricite']), transport: d(r['charge_transport']),
+              salaires: d(r['charge_salaires']), divers: d(r['charge_divers']))
       ];
     } catch (_) {
       return [];
@@ -56,9 +62,9 @@ class BilansRepo {
     try {
       idLocal = await BaseLocale.db.rawInsert(
           'INSERT INTO bilans_financiers_locaux (date_archivage, periode, chiffre_affaires, charge_electricite, '
-          'charge_transport, charge_salaires, charge_divers, total_charges, net_poche_boss, marge_nette_pct, envoye_supabase) '
-          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
-          [date, b.periode, b.ca, b.elec, b.transport, b.salaires, b.divers, b.totalCharges, b.netPoche, b.margePct]);
+          'charge_transport, charge_salaires, charge_divers, charge_loyer, total_charges, net_poche_boss, marge_nette_pct, envoye_supabase) '
+          'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+          [date, b.periode, b.ca, b.elec, b.transport, b.salaires, b.divers, b.loyer, b.totalCharges, b.netPoche, b.margePct]);
     } catch (e) {
       return 'erreur:$e';
     }
@@ -77,7 +83,7 @@ class BilansRepo {
             body: jsonEncode({
               'licence': email, 'date_archivage': date, 'periode': b.periode, 'chiffre_affaires': b.ca,
               'charge_electricite': b.elec, 'charge_transport': b.transport, 'charge_salaires': b.salaires,
-              'charge_divers': b.divers, 'total_charges': b.totalCharges, 'net_poche_boss': b.netPoche,
+              'charge_divers': b.divers, 'charge_loyer': b.loyer, 'total_charges': b.totalCharges, 'net_poche_boss': b.netPoche,
               'marge_nette_pct': b.margePct,
             }),
           )

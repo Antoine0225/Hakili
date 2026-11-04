@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../cloud/service_cloud.dart';
 import '../session.dart';
 import '../theme/palette.dart';
+import 'dialogue_operations_bloquees.dart';
 
 /// La pastille « Cloud » en haut à droite : voyant vert = synchronisé, gris = en attente.
 /// Survol : explication complète. Clic (Patron seulement) : détails techniques.
@@ -13,13 +14,20 @@ class IndicateurCloud extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = Palette.de(context);
     return ListenableBuilder(
-      listenable: Listenable.merge([ServiceCloud.etat, ServiceCloud.enAttente]),
+      listenable: Listenable.merge([ServiceCloud.etat, ServiceCloud.enAttente, ServiceCloud.bloquees]),
       builder: (context, _) {
         final etat = ServiceCloud.etat.value;
         final attente = ServiceCloud.enAttente.value;
+        final bloquees = ServiceCloud.bloquees.value;
         String court, long;
         var synchro = false;
-        if (etat == EtatCloud.ok && attente == 0) {
+        if (bloquees > 0) {
+          // le plus important d'abord : des lignes que le serveur refuse et qui n'arriveront jamais seules
+          court = bloquees == 1 ? '1 opération bloquée' : '$bloquees opérations bloquées';
+          long = Session.estPatron
+              ? '⚠️ $court — le serveur refuse ces lignes. Cliquez pour voir pourquoi et décider.'
+              : '⚠️ $court — prévenez le Patron.';
+        } else if (etat == EtatCloud.ok && attente == 0) {
           court = 'Synchronisé';
           long = '☁️ Synchronisé avec le Cloud — ${ServiceCloud.derniereHeure}';
           synchro = true;
@@ -46,7 +54,11 @@ class IndicateurCloud extends StatelessWidget {
             shape: StadiumBorder(side: BorderSide(color: p.bordure)),
             child: InkWell(
               customBorder: const StadiumBorder(),
-              onTap: Session.estPatron ? () => ouvrirDetailsCloud(context) : null,
+              onTap: !Session.estPatron
+                  ? null
+                  : (bloquees > 0
+                      ? () => ouvrirOperationsBloquees(context, onDetails: () => ouvrirDetailsCloud(context))
+                      : () => ouvrirDetailsCloud(context)),
               child: SizedBox(
                 height: 30,
                 child: Padding(
@@ -56,7 +68,8 @@ class IndicateurCloud extends StatelessWidget {
                       duration: const Duration(milliseconds: 300),
                       width: 10, height: 10,
                       decoration: BoxDecoration(
-                          color: synchro ? p.succes : p.voyantAttente, shape: BoxShape.circle),
+                          color: bloquees > 0 ? p.danger : (synchro ? p.succes : p.voyantAttente),
+                          shape: BoxShape.circle),
                     ),
                     const SizedBox(width: 7),
                     Text(court, style: TextStyle(fontSize: 12, color: p.txtPrinc)),

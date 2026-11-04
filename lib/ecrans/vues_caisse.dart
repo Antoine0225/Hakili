@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/ventes_repo.dart';
 import '../metier/modes_paiement.dart';
+import '../session.dart';
 import '../theme/palette.dart';
 import '../utilitaires/formats.dart';
 
@@ -40,7 +41,7 @@ class VueBilanGlobal extends StatelessWidget {
       txt += '👤 LIVRE ANALYTIQUE DES DETTES CLIENTS :\n';
       livre.forEach((cli, somme) => txt += '  • $cli vous doit  ➡️  ${milliersAnglais(somme)} FCFA\n');
     } else {
-      txt += "🔥 Félicitations Antoine, aucun crédit n'est dehors !";
+      txt += "🔥 Félicitations${Session.nomPatron.trim().isEmpty ? '' : ' ${Session.nomPatron.trim()}'}, aucun crédit n'est dehors !";
     }
     return Center(
       child: SingleChildScrollView(

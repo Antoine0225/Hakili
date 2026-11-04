@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/parametres.dart';
+import '../securite/limite_essais_pin.dart';
 import '../securite/pin.dart';
 import '../theme/palette.dart';
 
@@ -16,12 +17,26 @@ Future<bool> demanderPinPatron(BuildContext context, {required String titre, req
       Future<void> valider() async {
         if (enCours) return;
         setL(() => enCours = true);
+        final attente = await LimiteEssaisPin.secondesRestantes();
+        if (attente > 0) {
+          if (!ctx.mounted) return;
+          c.clear();
+          setL(() {
+            erreur = '⛔ ${LimiteEssaisPin.message(attente)}';
+            enCours = false;
+          });
+          return;
+        }
         final bon = await Pin.verifier(c.text.trim(), await Parametres.lire('pin_patron'));
         if (bon) {
+          await LimiteEssaisPin.reussite();
           if (ctx.mounted) Navigator.pop(ctx, true);
         } else {
+          final blocage = await LimiteEssaisPin.enregistrerEchec();
+          if (!ctx.mounted) return;
+          c.clear();
           setL(() {
-            erreur = '⛔ Code PIN incorrect.';
+            erreur = blocage > 0 ? '⛔ ${LimiteEssaisPin.message(blocage)}' : '⛔ Code PIN incorrect.';
             enCours = false;
           });
         }

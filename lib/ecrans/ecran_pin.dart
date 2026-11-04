@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../securite/limite_essais_pin.dart';
 import '../securite/pin.dart';
 import '../data/journal_repo.dart';
 import '../session.dart';
@@ -35,19 +36,35 @@ class _EcranPinState extends State<EcranPin> {
       _erreur = '';
     });
 
-    final role = await Pin.identifierRole(code);
+    // Trop d'erreurs de suite : on ne vérifie même pas le code, on demande d'attendre.
+    final attente = await LimiteEssaisPin.secondesRestantes();
     if (!mounted) return;
-
-    if (role == null) {
-      JournalRepo.noter('Sécurité', 'ÉCHEC', "Code PIN incorrect à l'ouverture du logiciel");
+    if (attente > 0) {
       _champ.clear();
       setState(() {
         _enCours = false;
-        _erreur = 'Code PIN incorrect. Veuillez réessayer.';
+        _erreur = LimiteEssaisPin.message(attente);
       });
       _focus.requestFocus();
       return;
     }
+
+    final role = await Pin.identifierRole(code);
+    if (!mounted) return;
+
+    if (role == null) {
+      final blocage = await LimiteEssaisPin.enregistrerEchec();
+      JournalRepo.noter('Sécurité', 'ÉCHEC', "Code PIN incorrect à l'ouverture du logiciel");
+      if (!mounted) return;
+      _champ.clear();
+      setState(() {
+        _enCours = false;
+        _erreur = blocage > 0 ? LimiteEssaisPin.message(blocage) : 'Code PIN incorrect. Veuillez réessayer.';
+      });
+      _focus.requestFocus();
+      return;
+    }
+    await LimiteEssaisPin.reussite();
     Session.role = role;
     JournalRepo.noter('Sécurité', 'CONNEXION', 'Ouverture de la session $role');
     widget.onOuvert();

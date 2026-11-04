@@ -213,7 +213,7 @@ class _EcranVentesState extends State<EcranVentes> {
   void _ouvrirArchives() {
     if (!Session.estPatron) {
       Dialogues.erreur(context, 'Accès Restreint',
-          '⚠️ Accès refusé. Seul le Patron Antoine possède la clé des archives historiques.');
+          '⚠️ Accès refusé. Seul le ${Session.patronLibelle} possède la clé des archives historiques.');
       return;
     }
     _voirVue('archives');

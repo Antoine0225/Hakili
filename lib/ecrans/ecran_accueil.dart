@@ -378,7 +378,7 @@ class _EcranAccueilState extends State<EcranAccueil> with SingleTickerProviderSt
                 style: TextStyle(fontFamily: policeTexte, fontSize: 12, fontWeight: FontWeight.bold, color: p.txtDoux)),
             Row(children: [
               Flexible(
-                child: Text('Bonjour, ${nom.isEmpty ? 'Antoine' : nom}',
+                child: Text('Bonjour, ${Session.nomPatron.trim().isNotEmpty ? titreCase(Session.nomPatron.trim()) : nom}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontFamily: policeTitre, fontSize: 34, fontWeight: FontWeight.bold, color: p.txtPrinc)),
               ),
@@ -725,7 +725,7 @@ class _EcranAccueilState extends State<EcranAccueil> with SingleTickerProviderSt
           backgroundColor: p.panneau,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: p.bordure)),
           title: Text('Stock Vide', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: p.txtPrinc)),
-          content: Text("⚠️ Antoine, tu n'as plus aucun sac d'aliment en stock !", style: TextStyle(color: p.txtPrinc)),
+          content: Text("⚠️ ${Session.nomPatron.trim().isEmpty ? 'Attention' : Session.nomPatron.trim()}, tu n'as plus aucun sac d'aliment en stock !", style: TextStyle(color: p.txtPrinc)),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
         ),
       );
